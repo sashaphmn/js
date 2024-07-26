@@ -9,7 +9,6 @@ import { getContract } from "../../../../../../contract/contract.js";
 import { deployERC20Contract } from "../../../../../../extensions/prebuilts/deploy-erc20.js";
 import { deployERC721Contract } from "../../../../../../extensions/prebuilts/deploy-erc721.js";
 import { deployERC1155Contract } from "../../../../../../extensions/prebuilts/deploy-erc1155.js";
-import type { Hex } from "../../../../../../utils/encoding/helpers/is-hex.js";
 import {
   ClaimButton,
   getERC20ClaimTo,
@@ -25,7 +24,7 @@ const chain = ANVIL_CHAIN;
  * The ClaimButton uses TransactionButton under the hood
  * So all we need to test is whether it gives the correct PreparedTransaction to the TransactionButton
  */
-describe("ClaimButton", () => {
+describe.runIf(process.env.TW_SECRET_KEY)("ClaimButton", () => {
   // ERC721
   it("should throw an error if not an ERC721 contract", async () => {
     const contract = USDT_CONTRACT;
@@ -77,7 +76,7 @@ describe("ClaimButton", () => {
       <ClaimButton
         client={client}
         chain={chain}
-        contractAddress={address as Hex}
+        contractAddress={address}
         claimParams={{ quantity: 1n, type: "ERC721" }}
       >
         Claim
@@ -151,7 +150,7 @@ describe("ClaimButton", () => {
       <ClaimButton
         client={client}
         chain={chain}
-        contractAddress={address as Hex}
+        contractAddress={address}
         claimParams={{ quantity: 1n, type: "ERC1155", tokenId: 0n }}
       >
         Claim
@@ -222,7 +221,7 @@ describe("ClaimButton", () => {
       <ClaimButton
         client={client}
         chain={chain}
-        contractAddress={address as Hex}
+        contractAddress={address}
         claimParams={{ quantity: "100", type: "ERC20" }}
       >
         Claim
@@ -259,7 +258,7 @@ describe("ClaimButton", () => {
       <ClaimButton
         client={client}
         chain={chain}
-        contractAddress={address as Hex}
+        contractAddress={address}
         claimParams={{ quantityInWei: 1000000n, type: "ERC20" }}
       >
         Claim
