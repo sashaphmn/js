@@ -1,11 +1,5 @@
 import { type SDKOptions, ThirdwebSDK } from "@thirdweb-dev/sdk";
-import {
-  type GatewayUrls,
-  type IStorageDownloader,
-  type SingleDownloadOptions,
-  StorageDownloader,
-  ThirdwebStorage,
-} from "@thirdweb-dev/storage";
+import { StorageDownloader, ThirdwebStorage } from "@thirdweb-dev/storage";
 import {
   DASHBOARD_THIRDWEB_CLIENT_ID,
   DASHBOARD_THIRDWEB_SECRET_KEY,
@@ -13,6 +7,18 @@ import {
 } from "constants/rpc";
 import type { Signer } from "ethers";
 import { getAbsoluteUrl } from "./vercel-utils";
+
+/**
+ * This file will be deleted eventually once we fully migrated to SDK v5
+ * until then, we hard-code these types from @storage so that we can get rid of it
+ */
+type GatewayUrls = {
+  [key: string]: string[];
+};
+type SingleDownloadOptions = {
+  timeoutInSeconds?: number;
+  maxRetries?: number;
+};
 
 // use env var to set IPFS gateway or fallback to ipfscdn.io
 export const IPFS_GATEWAY_URL =
@@ -35,7 +41,7 @@ const defaultDownloader = new StorageDownloader({
   secretKey: DASHBOARD_THIRDWEB_SECRET_KEY,
 });
 
-class SpecialDownloader implements IStorageDownloader {
+class SpecialDownloader {
   async download(
     url: string,
     gatewayUrls?: GatewayUrls,
@@ -92,7 +98,7 @@ export const StorageSingleton = new ThirdwebStorage({
   secretKey: DASHBOARD_THIRDWEB_SECRET_KEY,
   uploadServerUrl: DASHBOARD_STORAGE_URL,
   downloader: new SpecialDownloader(),
-}) as ThirdwebStorage;
+});
 
 // EVM SDK
 const EVM_SDK_MAP = new Map<string, ThirdwebSDK>();
