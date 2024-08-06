@@ -16,7 +16,7 @@ import {
   mockExtensionWithFunctionsBytecode,
   mockExtensionWithFunctionsCompilerMetadata,
 } from "./mock/mockExtensionWithFunctionsMetadata";
-import { compatibleExtensions } from "../../src/evm/common/modular/compatibleExtensions";
+import { compatibleModules } from "../../src/evm/common/modular/compatibleModules";
 import { mockExtensionWithInterfaceBytecode } from "./mock/mockExtensionWithInterface";
 
 describe("Modular contract deployment", async () => {
@@ -124,7 +124,7 @@ describe("Modular contract deployment", async () => {
 
   it("should check extension compatibility", async () => {
     // duplicate callback/fallback
-    let isCompatible = await compatibleExtensions(
+    let isCompatible = await compatibleModules(
       mockCoreBytecode,
       [mockExtensionWithFunctionsBytecode, mockExtensionWithFunctionsBytecode],
       11155111,
@@ -133,7 +133,7 @@ describe("Modular contract deployment", async () => {
     expect(isCompatible).to.be.false;
 
     // required interface not supported
-    isCompatible = await compatibleExtensions(
+    isCompatible = await compatibleModules(
       mockCoreBytecode,
       [mockExtensionWithInterfaceBytecode],
       11155111,
