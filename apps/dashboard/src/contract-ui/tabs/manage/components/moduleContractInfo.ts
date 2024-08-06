@@ -4,7 +4,7 @@ import { THIRDWEB_DEPLOYER_ADDRESS } from "constants/addresses";
 import { useMemo } from "react";
 import { useActiveAccount } from "thirdweb/react";
 
-export function useExtensionContractInfo(contractAddress: string) {
+export function useModuleContractInfo(contractAddress: string) {
   const address = useActiveAccount()?.address;
   const activeNetworkInfo = useEVMContractInfo();
 

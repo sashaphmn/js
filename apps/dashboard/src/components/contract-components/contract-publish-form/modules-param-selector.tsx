@@ -20,9 +20,11 @@ interface ModulesParamSelectorProps {
   onChange: (fn: string) => void;
 }
 
-export const ModulesParamSelector: React.FC<
-  ModulesParamSelectorProps
-> = ({ deployParams, value, onChange }) => {
+export const ModulesParamSelector: React.FC<ModulesParamSelectorProps> = ({
+  deployParams,
+  value,
+  onChange,
+}) => {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger>

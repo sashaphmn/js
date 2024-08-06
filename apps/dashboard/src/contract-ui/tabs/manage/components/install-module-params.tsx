@@ -3,40 +3,38 @@ import { useQuery } from "@tanstack/react-query";
 import invariant from "tiny-invariant";
 import { FormErrorMessage, FormLabel } from "tw-components";
 import { SolidityInput } from "../../../components/solidity-inputs";
-import type { InstallExtensionForm } from "./ExtensionForm";
-import { getExtensionInstalledParams } from "./getExtensionInstalledParams";
+import type { InstallModuleForm } from "./ModuleForm";
+import { getModuleInstalledParams } from "./getModuleInstalledParams";
 
-export type ExtensionMeta = {
-  extensionName: string;
-  extensionVersion: string;
+export type ModuleMeta = {
+  moduleName: string;
+  moduleVersion: string;
   publisherAddress: string;
 };
 
 /**
- * Get the install params for the "encodeBytesOnInstall" function for all given extensions for a given modular contract
+ * Get the install params for the "encodeBytesOnInstall" function for all given modules for a given modular contract
  * to render the form in deploy contract form
  */
-export function useExtensionInstallParams(props: {
-  extension?: ExtensionMeta;
+export function useModuleInstallParams(props: {
+  module?: ModuleMeta;
   isQueryEnabled: boolean;
 }) {
-  const { extension, isQueryEnabled } = props;
+  const { module, isQueryEnabled } = props;
   return useQuery({
-    queryKey: ["useExtensionInstallParams", extension],
+    queryKey: ["useModuleInstallParams", module],
     queryFn: async () => {
-      invariant(extension, "extension must be defined");
-      return await getExtensionInstalledParams(extension);
+      invariant(module, "module must be defined");
+      return await getModuleInstalledParams(module);
     },
-    enabled: !!(isQueryEnabled && extension),
+    enabled: !!(isQueryEnabled && module),
     refetchOnWindowFocus: false,
   });
 }
 
-export function ExtensionInstallParams(props: {
-  installParams: NonNullable<
-    ReturnType<typeof useExtensionInstallParams>["data"]
-  >;
-  form: InstallExtensionForm;
+export function ModuleInstallParams(props: {
+  installParams: NonNullable<ReturnType<typeof useModuleInstallParams>["data"]>;
+  form: InstallModuleForm;
   disableInputs: boolean;
 }) {
   const { form } = props;
@@ -45,7 +43,7 @@ export function ExtensionInstallParams(props: {
     <div className="py-4">
       <div className="flex flex-col gap-3">
         {props.installParams.params.map((param) => {
-          const formFieldKey = `extensionIntallParams.${param.name}` as const;
+          const formFieldKey = `moduleInstallFormParams.${param.name}` as const;
 
           return (
             <FormControl

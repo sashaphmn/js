@@ -1,72 +1,72 @@
 import { FormControl } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { SolidityInput } from "contract-ui/components/solidity-inputs";
-import { getExtensionInstalledParams } from "contract-ui/tabs/manage/components/getExtensionInstalledParams";
+import { getModuleInstalledParams } from "contract-ui/tabs/manage/components/getModuleInstalledParams";
 import invariant from "tiny-invariant";
 import { FormErrorMessage, FormLabel } from "tw-components";
 import type { CustomContractDeploymentForm } from "./custom-contract";
 import { PrimarySaleFieldset } from "./primary-sale-fieldset";
 import { RoyaltyFieldset } from "./royalty-fieldset";
 
-type ExtensionMeta = {
-  extensionName: string;
-  extensionVersion: string;
+type ModuleMeta = {
+  moduleName: string;
+  moduleVersion: string;
   publisherAddress: string;
 };
 
 /**
- * Get the install params for all given extensions
+ * Get the install params for all given modules
  */
-export function useModularContractsDefaultExtensionsInstallParams(props: {
-  defaultExtensions?: ExtensionMeta[];
+export function useModularContractsDefaultModulesInstallParams(props: {
+  defaultModules?: ModuleMeta[];
   isQueryEnabled: boolean;
 }) {
-  const { defaultExtensions, isQueryEnabled } = props;
+  const { defaultModules, isQueryEnabled } = props;
   return useQuery({
     queryKey: [
-      "useModularContractsDefaultExtensionsInstallParams",
-      defaultExtensions,
+      "useModularContractsDefaultModulesInstallParams",
+      defaultModules,
     ],
     queryFn: async () => {
-      invariant(defaultExtensions, "defaultExtensions must be defined");
-      return Promise.all(defaultExtensions.map(getExtensionInstalledParams));
+      invariant(defaultModules, "defaultModules must be defined");
+      return Promise.all(defaultModules.map(getModuleInstalledParams));
     },
-    enabled: !!(isQueryEnabled && defaultExtensions),
+    enabled: !!(isQueryEnabled && defaultModules),
     refetchOnWindowFocus: false,
   });
 }
 
-export type UseModularContractsDefaultExtensionsInstallParams = ReturnType<
-  typeof useModularContractsDefaultExtensionsInstallParams
+export type UseModularContractsDefaultModulesInstallParams = ReturnType<
+  typeof useModularContractsDefaultModulesInstallParams
 >;
 
-type Extensions = NonNullable<
-  UseModularContractsDefaultExtensionsInstallParams["data"]
+type Modules = NonNullable<
+  UseModularContractsDefaultModulesInstallParams["data"]
 >;
 
-type ExtensionWithIndex = Extensions[number] & { extensionIndex: number };
+type ModuleWithIndex = Modules[number] & { moduleIndex: number };
 
-export function ModularContractDefaultExtensionsFieldset(props: {
-  extensions: Extensions;
+export function ModularContractDefaultModulesFieldset(props: {
+  modules: Modules;
   form: CustomContractDeploymentForm;
   isTWPublisher: boolean;
 }) {
-  // save the index of the extension before filtering out
-  const extensionsWithIndex: ExtensionWithIndex[] = props.extensions
+  // save the index of the module before filtering out
+  const modulesWithIndex: ModuleWithIndex[] = props.modules
     .map((v, i) => ({
       ...v,
-      extensionIndex: i,
+      moduleIndex: i,
     }))
     .filter((v) => v.params.length > 0);
 
   return (
     <div className="py-4">
       <div className="flex flex-col gap-4">
-        {extensionsWithIndex.map((ext) => {
+        {modulesWithIndex.map((ext) => {
           return (
-            <RenderExtension
-              key={ext.extensionName}
-              extension={ext}
+            <RenderModule
+              key={ext.moduleName}
+              module={ext}
               isTWPublisher={props.isTWPublisher}
               form={props.form}
             />
@@ -77,34 +77,26 @@ export function ModularContractDefaultExtensionsFieldset(props: {
   );
 }
 
-function RenderExtension(props: {
-  extension: ExtensionWithIndex;
+function RenderModule(props: {
+  module: ModuleWithIndex;
   form: CustomContractDeploymentForm;
   isTWPublisher: boolean;
 }) {
-  const { extension, form } = props;
+  const { module, form } = props;
 
   // only consider mapping if published by thirdweb, else show the generic form
   if (props.isTWPublisher) {
-    const paramNames = extension.params.map((param) => param.name);
+    const paramNames = module.params.map((param) => param.name);
 
     if (showRoyaltyFieldset(paramNames)) {
       return (
-        <RenderRoyaltyFieldset
-          extension={extension}
-          form={form}
-          isTWPublisher
-        />
+        <RenderRoyaltyFieldset module={module} form={form} isTWPublisher />
       );
     }
 
     if (showPrimarySaleFiedset(paramNames)) {
       return (
-        <RenderPrimarySaleFieldset
-          extension={extension}
-          form={form}
-          isTWPublisher
-        />
+        <RenderPrimarySaleFieldset module={module} form={form} isTWPublisher />
       );
     }
   }
@@ -112,12 +104,12 @@ function RenderExtension(props: {
   return (
     <div>
       <h3 className="text-lg mb-2 text-secondary-foreground font-medium">
-        {extension.extensionName}
+        {module.moduleName}
       </h3>
       <div className="flex flex-col gap-3">
-        {extension.params.map((param) => {
+        {module.params.map((param) => {
           const formFieldKey =
-            `modularContractDefaultExtensionsInstallParams.${extension.extensionIndex}.${param.name}` as const;
+            `modularContractDefaultModulesInstallParams.${module.moduleIndex}.${param.name}` as const;
 
           return (
             <FormControl
@@ -149,14 +141,14 @@ function RenderExtension(props: {
 }
 
 function RenderPrimarySaleFieldset(prosp: {
-  extension: ExtensionWithIndex;
+  module: ModuleWithIndex;
   form: CustomContractDeploymentForm;
   isTWPublisher: boolean;
 }) {
-  const { extension, form } = prosp;
+  const { module, form } = prosp;
 
   const primarySaleRecipientPath =
-    `modularContractDefaultExtensionsInstallParams.${extension.extensionIndex}.primarySaleRecipient` as const;
+    `modularContractDefaultModulesInstallParams.${module.moduleIndex}.primarySaleRecipient` as const;
 
   return (
     <PrimarySaleFieldset
@@ -173,17 +165,17 @@ function RenderPrimarySaleFieldset(prosp: {
 }
 
 function RenderRoyaltyFieldset(props: {
-  extension: ExtensionWithIndex;
+  module: ModuleWithIndex;
   form: CustomContractDeploymentForm;
   isTWPublisher: boolean;
 }) {
-  const { extension: ext, form } = props;
+  const { module: ext, form } = props;
 
   const royaltyRecipientPath =
-    `modularContractDefaultExtensionsInstallParams.${ext.extensionIndex}.royaltyRecipient` as const;
+    `modularContractDefaultModulesInstallParams.${ext.moduleIndex}.royaltyRecipient` as const;
 
   const royaltyBpsPath =
-    `modularContractDefaultExtensionsInstallParams.${ext.extensionIndex}.royaltyBps` as const;
+    `modularContractDefaultModulesInstallParams.${ext.moduleIndex}.royaltyBps` as const;
 
   return (
     <RoyaltyFieldset

@@ -20,11 +20,7 @@ export const DynamicContractsFieldset = () => {
       </Flex>
       <Flex flexDir="column" gap={4}>
         {fields.map((item, index) => (
-          <ExtensionInput
-            key={item.id}
-            remove={remove}
-            index={index}
-          />
+          <ExtensionInput key={item.id} remove={remove} index={index} />
         ))}
         <Box>
           <Button

@@ -86,8 +86,8 @@ export const DefaultFactory: React.FC<DefaultFactoryProps> = ({
             <Flex flexDir="column" gap={2} mt={4}>
               <Heading size="title.md">Modules Param</Heading>
               <Text>
-                The contract uses modules. Choose the modules param name
-                from the initializer params below.
+                The contract uses modules. Choose the modules param name from
+                the initializer params below.
               </Text>
             </Flex>
             <FormControl isRequired>
@@ -108,12 +108,8 @@ export const DefaultFactory: React.FC<DefaultFactoryProps> = ({
         )}
       </Flex>
       <NetworksFieldset />
-      {shouldShowDynamicFactoryInput && (
-        <DynamicContractsFieldset />
-      )}
-      {shouldShowModularFactoryInput && (
-        <ModularContractsFieldset />
-      )}
+      {shouldShowDynamicFactoryInput && <DynamicContractsFieldset />}
+      {shouldShowModularFactoryInput && <ModularContractsFieldset />}
     </Flex>
   );
 };

@@ -20,11 +20,7 @@ export const ModularContractsFieldset = () => {
       </Flex>
       <Flex flexDir="column" gap={4}>
         {fields.map((item, index) => (
-          <ModuleInput
-            key={item.id}
-            remove={remove}
-            index={index}
-          />
+          <ModuleInput key={item.id} remove={remove} index={index} />
         ))}
         <Box>
           <Button

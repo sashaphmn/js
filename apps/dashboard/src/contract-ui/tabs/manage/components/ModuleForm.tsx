@@ -2,7 +2,7 @@ import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { thirdwebClient } from "@/constants/client";
 import { FormControl, Input, Select, Skeleton, Spacer } from "@chakra-ui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { compatibleExtensions } from "@thirdweb-dev/sdk";
+import { compatibleModules } from "@thirdweb-dev/sdk";
 import { TransactionButton } from "components/buttons/TransactionButton";
 import {
   useAllVersions,
@@ -15,37 +15,37 @@ import {
   sendTransaction,
   waitForReceipt,
 } from "thirdweb";
-import { installPublishedExtension } from "thirdweb/extensions/modular";
+import { installPublishedModule } from "thirdweb/extensions/modular";
 import { download } from "thirdweb/storage";
 import { encodeAbiParameters, resolveImplementation } from "thirdweb/utils";
 import type { Account } from "thirdweb/wallets";
 import { FormErrorMessage, FormLabel } from "tw-components";
 import {
-  ExtensionInstallParams,
-  useExtensionInstallParams,
-} from "./install-extension-params";
+  ModuleInstallParams,
+  useModuleInstallParams,
+} from "./install-module-params";
 
 type FormData = {
   publisherAddress: string;
-  extensionContract: string;
+  moduleContract: string;
   version: string;
-  // install params of extension to be installed
-  extensionIntallParams?: Record<string, string>;
+  // install params of modules to be installed
+  moduleInstallFormParams?: Record<string, string>;
 };
 
-export type InstallExtensionFormProps = {
+export type InstallModuleFormProps = {
   contract: ContractOptions;
-  refetchExtensions: () => void;
+  refetchModules: () => void;
   account: Account;
-  installedExtensions: {
+  installedModules: {
     data?: string[];
     isLoading: boolean;
   };
 };
 
-export type InstallExtensionForm = UseFormReturn<FormData>;
+export type InstallModuleForm = UseFormReturn<FormData>;
 
-export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
+export const InstallModuleForm = (props: InstallModuleFormProps) => {
   const form = useForm<FormData>({
     defaultValues: {
       version: "latest",
@@ -57,37 +57,37 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
 
   const publishedContractsQuery = usePublishedContractsQuery(
     watch("publisherAddress"),
-    "ModularExtension",
+    "ModularModule",
   );
   const allVersions = useAllVersions(
     watch("publisherAddress"),
-    watch("extensionContract"),
+    watch("moduleContract"),
   );
 
   const installMutation = useMutation({
     mutationFn: async () => {
-      const extensionIntallParams = watch("extensionIntallParams");
-      let extensionData: `0x${string}` | undefined;
+      const moduleInstallFormParams = watch("moduleInstallFormParams");
+      let moduleData: `0x${string}` | undefined;
 
-      if (extensionIntallParams && extensionInstallParams.data) {
-        extensionData = encodeAbiParameters(
-          extensionInstallParams.data.params.map((p) => ({
+      if (moduleInstallFormParams && moduleInstallParams.data) {
+        moduleData = encodeAbiParameters(
+          moduleInstallParams.data.params.map((p) => ({
             name: p.name,
             type: p.type,
           })),
-          Object.values(extensionIntallParams),
+          Object.values(moduleInstallFormParams),
         );
       }
 
-      const installTransaction = installPublishedExtension({
+      const installTransaction = installPublishedModule({
         contract,
         chain: contract.chain,
         client: contract.client,
         account,
-        extensionName: watch("extensionContract"),
+        moduleName: watch("moduleContract"),
         publisherAddress: watch("publisherAddress"),
         version: watch("version"),
-        extensionData,
+        moduleData,
       });
 
       const txResult = await sendTransaction({
@@ -98,18 +98,18 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
       await waitForReceipt(txResult);
     },
     onSuccess() {
-      props.refetchExtensions();
-      toast.success("Extension installed successfully");
+      props.refetchModules();
+      toast.success("Module installed successfully");
       // clear form
       reset({
         publisherAddress: "",
-        extensionContract: "",
+        moduleContract: "",
         version: "latest",
-        extensionIntallParams: undefined,
+        moduleInstallFormParams: undefined,
       });
     },
     onError(err) {
-      toast.error("Failed to install extension");
+      toast.error("Failed to install module");
       console.error("Error during installation:", err);
     },
   });
@@ -118,12 +118,12 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
     installMutation.mutate();
   };
 
-  const extensionContractInputProps = register("extensionContract", {
-    required: "Extension name is required",
+  const moduleContractInputProps = register("moduleContract", {
+    required: "Module name is required",
   });
 
-  const selectedExtension = publishedContractsQuery.data?.find(
-    (x) => x.id === watch("extensionContract"),
+  const selectedModule = publishedContractsQuery.data?.find(
+    (x) => x.id === watch("moduleContract"),
   );
 
   // Get core contract bytecode
@@ -138,22 +138,22 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
     // staleTime: 1000 * 60 * 30,
   });
 
-  // Get Installed extension bytecodes
-  const installedExtensionBytecodesQuery = useQuery({
+  // Get Installed module bytecodes
+  const installedModuleBytecodesQuery = useQuery({
     queryKey: [
-      "installedExtensionBytecodes",
+      "installedModuleBytecodes",
       contract.address,
       contract.chain.id,
-      props.installedExtensions.data,
+      props.installedModules.data,
     ],
     queryFn: async () => {
-      const extensionAddress = props.installedExtensions.data;
-      if (!extensionAddress) {
+      const moduleAddress = props.installedModules.data;
+      if (!moduleAddress) {
         return [];
       }
 
       return Promise.all(
-        extensionAddress.map(async (address) => {
+        moduleAddress.map(async (address) => {
           const result = await resolveImplementation({
             client: thirdwebClient,
             address,
@@ -161,46 +161,46 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
           });
 
           if (!result) {
-            throw new Error("Failed to fetch bytecode for extension");
+            throw new Error("Failed to fetch bytecode for module");
           }
 
           return result.bytecode;
         }),
       );
     },
-    enabled: !!props.installedExtensions.data,
+    enabled: !!props.installedModules.data,
     retry: false,
     // 30 minutes
     staleTime: 1000 * 60 * 30,
   });
 
-  // check if selected extension is compatible with the core contract and installed extensions
-  const isExtensionCompatibleQuery = useQuery({
+  // check if selected module is compatible with the core contract and installed modules
+  const isModuleCompatibleQuery = useQuery({
     queryKey: [
-      "isExtensionCompatible",
+      "isModuleCompatible",
       contract.address,
       contract.chain.id,
-      installedExtensionBytecodesQuery.data,
+      installedModuleBytecodesQuery.data,
       coreContractByteCodeQuery.data,
-      selectedExtension,
+      selectedModule,
     ],
     queryFn: async () => {
       if (
         !coreContractByteCodeQuery.data ||
-        !installedExtensionBytecodesQuery.data ||
-        !selectedExtension
+        !installedModuleBytecodesQuery.data ||
+        !selectedModule
       ) {
         throw new Error("Unexpected error");
       }
 
-      return isExtensionCompatible({
+      return isModuleCompatible({
         contractInfo: {
           bytecode: coreContractByteCodeQuery.data,
-          installedExtensionBytecodes: installedExtensionBytecodesQuery.data,
+          installedModuleBytecodes: installedModuleBytecodesQuery.data,
           chainId: contract.chain.id,
         },
-        extensionInfo: {
-          bytecodeUri: selectedExtension.metadata.bytecodeUri,
+        moduleInfo: {
+          bytecodeUri: selectedModule.metadata.bytecodeUri,
         },
       });
     },
@@ -208,23 +208,23 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
     // 30 minutes
     staleTime: 1000 * 60 * 30,
     enabled:
-      !!selectedExtension &&
+      !!selectedModule &&
       !!coreContractByteCodeQuery.data &&
-      !!installedExtensionBytecodesQuery.data,
+      !!installedModuleBytecodesQuery.data,
   });
 
-  const selectedExtensionMeta =
-    watch("extensionContract") && watch("version") && watch("publisherAddress")
+  const selectedModuleMeta =
+    watch("moduleContract") && watch("version") && watch("publisherAddress")
       ? {
-          extensionName: watch("extensionContract"),
-          extensionVersion: watch("version"),
+          moduleName: watch("moduleContract"),
+          moduleVersion: watch("version"),
           publisherAddress: watch("publisherAddress"),
         }
       : undefined;
 
-  const extensionInstallParams = useExtensionInstallParams({
-    extension: selectedExtensionMeta,
-    isQueryEnabled: !!selectedExtension && !!isExtensionCompatibleQuery.data,
+  const moduleInstallParams = useModuleInstallParams({
+    module: selectedModuleMeta,
+    isQueryEnabled: !!selectedModule && !!isModuleCompatibleQuery.data,
   });
 
   return (
@@ -253,12 +253,11 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
 
           <FormControl
             isInvalid={
-              !!errors.extensionContract ||
-              isExtensionCompatibleQuery.data === false
+              !!errors.moduleContract || isModuleCompatibleQuery.data === false
             }
             isRequired={true}
           >
-            <FormLabel>Extension Name</FormLabel>
+            <FormLabel>Module Name</FormLabel>
             <Skeleton
               isLoaded={
                 !!publishedContractsQuery.data ||
@@ -273,16 +272,16 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
                   publishedContractsQuery.isLoading
                 }
                 bg="backgroundHighlight"
-                {...extensionContractInputProps}
+                {...moduleContractInputProps}
                 onChange={(e) => {
-                  // reset version when extension changes
+                  // reset version when module changes
                   resetField("version");
-                  extensionContractInputProps.onChange(e);
+                  moduleContractInputProps.onChange(e);
                 }}
                 placeholder={
                   publishedContractsQuery.data?.length === 0
-                    ? "No extensions"
-                    : "Select extension"
+                    ? "No modules"
+                    : "Select module"
                 }
               >
                 {publishedContractsQuery?.data?.map(({ id }) => (
@@ -293,38 +292,38 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
               </Select>
             </Skeleton>
             <FormErrorMessage fontWeight={500}>
-              {!isExtensionCompatibleQuery.isFetching &&
-                isExtensionCompatibleQuery.data === false &&
-                "Extension is not compatible"}
-              {errors.extensionContract?.message}
+              {!isModuleCompatibleQuery.isFetching &&
+                isModuleCompatibleQuery.data === false &&
+                "Module is not compatible"}
+              {errors.moduleContract?.message}
             </FormErrorMessage>
 
-            {isExtensionCompatibleQuery.isFetching && selectedExtension && (
+            {isModuleCompatibleQuery.isFetching && selectedModule && (
               <div className="flex items-center gap-1.5 mt-2 text-link-foreground">
                 <p className="font-medium text-sm">Checking Compatibility</p>
                 <Spinner className="size-3" />
               </div>
             )}
 
-            {isExtensionCompatibleQuery.isError && (
+            {isModuleCompatibleQuery.isError && (
               <div className="flex items-center gap-1.5 mt-2">
                 <p className="text-yellow-600 text-sm">
-                  Extension may not be compatible
+                  Module may not be compatible
                 </p>
               </div>
             )}
           </FormControl>
 
           <FormControl isInvalid={!!errors.version} isRequired={true}>
-            <FormLabel>Extension Version</FormLabel>
+            <FormLabel>Module Version</FormLabel>
             <Skeleton isLoaded={!allVersions.isFetching} borderRadius="lg">
               <Select
                 disabled={
                   !allVersions.data ||
                   allVersions.isLoading ||
-                  isExtensionCompatibleQuery.data === false ||
+                  isModuleCompatibleQuery.data === false ||
                   installMutation.isLoading ||
-                  isExtensionCompatibleQuery.isFetching
+                  isModuleCompatibleQuery.isFetching
                 }
                 bg="backgroundHighlight"
                 w="full"
@@ -344,14 +343,14 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
           </FormControl>
         </div>
 
-        {extensionInstallParams.isFetching ? (
+        {moduleInstallParams.isFetching ? (
           <Skeleton h={"80px"} mt={4} />
         ) : (
-          extensionInstallParams.data &&
-          !isExtensionCompatibleQuery.isFetching &&
-          extensionInstallParams.data.params.length > 0 && (
-            <ExtensionInstallParams
-              installParams={extensionInstallParams.data}
+          moduleInstallParams.data &&
+          !isModuleCompatibleQuery.isFetching &&
+          moduleInstallParams.data.params.length > 0 && (
+            <ModuleInstallParams
+              installParams={moduleInstallParams.data}
               form={form}
               disableInputs={installMutation.isLoading}
             />
@@ -370,8 +369,8 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
             alignSelf="flex-end"
             isDisabled={
               !formState.isValid ||
-              isExtensionCompatibleQuery.data === false ||
-              isExtensionCompatibleQuery.isFetching
+              isModuleCompatibleQuery.data === false ||
+              isModuleCompatibleQuery.isFetching
             }
           >
             Install
@@ -382,29 +381,29 @@ export const InstallExtensionForm = (props: InstallExtensionFormProps) => {
   );
 };
 
-async function isExtensionCompatible(options: {
+async function isModuleCompatible(options: {
   contractInfo: {
     bytecode: string;
-    installedExtensionBytecodes: string[];
+    installedModuleBytecodes: string[];
     chainId: number;
   };
-  extensionInfo: {
+  moduleInfo: {
     bytecodeUri: string;
   };
 }) {
-  // 1. get extension's bytecode
+  // 1. get module's bytecode
   const res = await download({
     client: thirdwebClient,
-    uri: options.extensionInfo.bytecodeUri,
+    uri: options.moduleInfo.bytecodeUri,
   });
 
-  const extensionBytecode = await res.text();
+  const moduleBytecode = await res.text();
 
-  // 2. check compatibility with core and installed extensions
+  // 2. check compatibility with core and installed modules
   try {
-    const isCompatible = await compatibleExtensions(
+    const isCompatible = await compatibleModules(
       options.contractInfo.bytecode,
-      [...options.contractInfo.installedExtensionBytecodes, extensionBytecode],
+      [...options.contractInfo.installedModuleBytecodes, moduleBytecode],
       options.contractInfo.chainId,
     );
 

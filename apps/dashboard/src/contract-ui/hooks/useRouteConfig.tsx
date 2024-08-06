@@ -92,9 +92,9 @@ const LazyContractSourcesPage = dynamic(() =>
     ({ ContractSourcesPage }) => ContractSourcesPage,
   ),
 );
-const LazyContractEditExtensionsPage = dynamic(() =>
+const LazyContractEditModulesPage = dynamic(() =>
   import("../tabs/manage/page").then(
-    ({ ContractEditExtensionsPage }) => ContractEditExtensionsPage,
+    ({ ContractEditModulesPage }) => ContractEditModulesPage,
   ),
 );
 
@@ -136,7 +136,7 @@ export function useContractRouteConfig(
         contractQuery,
         feature: ["ModularCore"],
       }),
-      component: LazyContractEditExtensionsPage,
+      component: LazyContractEditModulesPage,
     },
     {
       title: "Code Snippets",

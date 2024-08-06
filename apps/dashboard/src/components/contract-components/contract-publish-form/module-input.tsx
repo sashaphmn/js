@@ -18,10 +18,7 @@ interface ModuleInputProps {
   remove: (index: number) => void;
 }
 
-export const ModuleInput: React.FC<ModuleInputProps> = ({
-  index,
-  remove,
-}) => {
+export const ModuleInput: React.FC<ModuleInputProps> = ({ index, remove }) => {
   const form = useFormContext();
   const feature = "ModularModule";
 

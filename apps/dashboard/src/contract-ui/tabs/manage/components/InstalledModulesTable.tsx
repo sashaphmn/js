@@ -26,38 +26,35 @@ import {
   sendTransaction,
   waitForReceipt,
 } from "thirdweb";
-import { uninstallExtensionByProxy } from "thirdweb/extensions/modular";
+import { uninstallModuleByProxy } from "thirdweb/extensions/modular";
 import type { Account } from "thirdweb/wallets";
-import { useExtensionContractInfo } from "./extensionContractInfo";
+import { useModuleContractInfo } from "./moduleContractInfo";
 
-export const InstalledExtensionsTable = (props: {
+export const InstalledModulesTable = (props: {
   contract: ContractOptions;
-  installedExtensions: {
+  installedModules: {
     data?: string[];
     isLoading: boolean;
   };
-  refetchExtensions: () => void;
+  refetchModules: () => void;
   ownerAccount?: Account;
 }) => {
-  const { installedExtensions, ownerAccount } = props;
+  const { installedModules, ownerAccount } = props;
 
   const sectionTitle = (
     <h2 className="mb-3 text-2xl tracking-tight font-bold">
-      Installed Extensions
+      Installed Modules
     </h2>
   );
 
-  if (
-    !installedExtensions.isLoading &&
-    installedExtensions.data?.length === 0
-  ) {
+  if (!installedModules.isLoading && installedModules.data?.length === 0) {
     return (
       <>
         {sectionTitle}
         <Alert variant="destructive">
           <div className="flex gap-3 items-center">
             <CircleSlash className="size-6 text-red-400" />
-            <AlertTitle className="mb-0">No extensions installed</AlertTitle>
+            <AlertTitle className="mb-0">No modules installed</AlertTitle>
           </div>
         </Alert>
       </>
@@ -71,17 +68,17 @@ export const InstalledExtensionsTable = (props: {
         <table className="w-full selection:bg-inverted selection:text-inverted-foreground">
           <thead>
             <TableHeadingRow>
-              <TableHeading> Extension Name </TableHeading>
+              <TableHeading> Module Name </TableHeading>
               <TableHeading> Description </TableHeading>
               <TableHeading> Publisher Address </TableHeading>
-              <TableHeading> Extension Address </TableHeading>
+              <TableHeading> Module Address </TableHeading>
               <TableHeading> Version </TableHeading>
               {ownerAccount && <TableHeading> Remove </TableHeading>}
             </TableHeadingRow>
           </thead>
 
           <tbody>
-            {installedExtensions.isLoading ? (
+            {installedModules.isLoading ? (
               <>
                 <SkeletonRow ownerAccount={ownerAccount} />
                 <SkeletonRow ownerAccount={ownerAccount} />
@@ -89,13 +86,13 @@ export const InstalledExtensionsTable = (props: {
               </>
             ) : (
               <>
-                {installedExtensions.data?.map((e, i) => (
-                  <ExtensionRow
+                {installedModules.data?.map((e, i) => (
+                  <ModuleRow
                     // biome-ignore lint/suspicious/noArrayIndexKey: FIXME
                     key={i}
-                    extensionAddress={e}
+                    moduleAddress={e}
                     contract={props.contract}
-                    onRemoveExtension={props.refetchExtensions}
+                    onRemoveModule={props.refetchModules}
                     ownerAccount={ownerAccount}
                   />
                 ))}
@@ -139,25 +136,25 @@ function SkeletonRow(props: { ownerAccount?: Account }) {
   );
 }
 
-function ExtensionRow(props: {
-  extensionAddress: string;
+function ModuleRow(props: {
+  moduleAddress: string;
   contract: ContractOptions;
-  onRemoveExtension: () => void;
+  onRemoveModule: () => void;
   ownerAccount?: Account;
 }) {
-  const { contract, extensionAddress, ownerAccount } = props;
+  const { contract, moduleAddress, ownerAccount } = props;
   const [isUninstallModalOpen, setIsUninstallModalOpen] = useState(false);
 
-  const contractInfo = useExtensionContractInfo(props.extensionAddress);
+  const contractInfo = useModuleContractInfo(props.moduleAddress);
 
   const uninstallMutation = useMutation({
     mutationFn: async (account: Account) => {
-      const uninstallTransaction = uninstallExtensionByProxy({
+      const uninstallTransaction = uninstallModuleByProxy({
         contract,
         chain: contract.chain,
         client: contract.client,
-        extensionProxyAddress: extensionAddress,
-        extensionData: "0x",
+        moduleProxyAddress: moduleAddress,
+        moduleData: "0x",
       });
 
       const txResult = await sendTransaction({
@@ -168,11 +165,11 @@ function ExtensionRow(props: {
       await waitForReceipt(txResult);
     },
     onSuccess() {
-      toast.success("Extension Removed successfully");
-      props.onRemoveExtension();
+      toast.success("Module Removed successfully");
+      props.onRemoveModule();
     },
     onError(error) {
-      toast.error("Failed to remove extension");
+      toast.error("Failed to remove module");
       console.error("Error during uninstallation:", error);
     },
   });
@@ -209,7 +206,7 @@ function ExtensionRow(props: {
       <TableData>
         <CopyAddressButton
           className="text-xs"
-          address={extensionAddress || ""}
+          address={moduleAddress || ""}
           copyIconPosition="left"
           variant="outline"
         />
@@ -224,7 +221,7 @@ function ExtensionRow(props: {
       {ownerAccount && (
         <TableData>
           <div>
-            <ToolTipLabel label="Remove Extension">
+            <ToolTipLabel label="Remove Module">
               <Button
                 onClick={() => setIsUninstallModalOpen(true)}
                 variant="outline"
@@ -253,7 +250,7 @@ function ExtensionRow(props: {
             }}
           >
             <DialogHeader>
-              <DialogTitle>Uninstall Extension</DialogTitle>
+              <DialogTitle>Uninstall Module</DialogTitle>
               <DialogDescription>
                 Are you sure you want to uninstall{" "}
                 <span className="text-foreground font-medium ">
