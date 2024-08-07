@@ -25,7 +25,7 @@ interface ContractCardProps {
     source: string;
     itemIndex: `${number}`;
   };
-  isBeta?: boolean;
+  isBeta: boolean | undefined;
 }
 
 export const ContractCard: React.FC<ContractCardProps> = ({
@@ -174,7 +174,7 @@ async function publishedContractQueryFn(
 ) {
   const polygonSdk = getThirdwebSDK(
     polygon.id,
-    getDashboardChainRpc(polygon.id),
+    getDashboardChainRpc(polygon.id, undefined),
   );
 
   const publisherEns = await queryClient.fetchQuery(ensQuery(publisher));

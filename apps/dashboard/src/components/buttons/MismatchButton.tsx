@@ -16,22 +16,30 @@ import { AiOutlineWarning } from "@react-icons/all-files/ai/AiOutlineWarning";
 import { useSDK, useSDKChainId } from "@thirdweb-dev/react";
 import { useTrack } from "hooks/analytics/useTrack";
 import { useSupportedChain } from "hooks/chains/configureChains";
+import { useRouter } from "next/navigation";
 import { forwardRef, useCallback, useMemo, useRef } from "react";
 import { VscDebugDisconnect } from "react-icons/vsc";
 import { localhost } from "thirdweb/chains";
 import {
   useActiveAccount,
   useActiveWallet,
-  useActiveWalletChain,
   useActiveWalletConnectionStatus,
   useSwitchActiveWalletChain,
   useWalletBalance,
 } from "thirdweb/react";
 import { Button, type ButtonProps, Card, Heading, Text } from "tw-components";
-import { defineDashboardChain } from "../../lib/v5-adapter";
+import {
+  useDashboardActiveWalletChain,
+  useV5DashboardChain,
+} from "../../lib/v5-adapter";
+
+const GAS_FREE_CHAINS = [
+  75513, // Geek verse testnet
+  75512, // Geek verse mainnet
+];
 
 function useNetworkMismatchAdapter() {
-  const walletChainId = useActiveWalletChain()?.id;
+  const walletChainId = useDashboardActiveWalletChain()?.id;
   const v4SDKChainId = useSDKChainId();
   if (!walletChainId || !v4SDKChainId) {
     // simply not ready yet, assume false
@@ -45,7 +53,8 @@ export const MismatchButton = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ children, isDisabled, onClick, loadingText, type, ...props }, ref) => {
     const account = useActiveAccount();
     const wallet = useActiveWallet();
-    const activeWalletChain = useActiveWalletChain();
+    const activeWalletChain = useDashboardActiveWalletChain();
+
     const evmBalance = useWalletBalance({
       address: account?.address,
       chain: activeWalletChain,
@@ -56,7 +65,7 @@ export const MismatchButton = forwardRef<HTMLButtonElement, ButtonProps>(
     const { isOpen, onOpen, onClose } = useDisclosure();
     const trackEvent = useTrack();
 
-    const chainId = useActiveWalletChain()?.id;
+    const chainId = activeWalletChain?.id;
     const chainInfo = useSupportedChain(chainId || -1);
 
     const eventRef = useRef<React.MouseEvent<HTMLButtonElement, MouseEvent>>();
@@ -69,7 +78,10 @@ export const MismatchButton = forwardRef<HTMLButtonElement, ButtonProps>(
         />
       );
     }
-    const shouldShowEVMFaucet = (evmBalance.data?.value || 0n) === 0n;
+    const shouldShowEVMFaucet =
+      chainId &&
+      (evmBalance.data?.value || 0n) === 0n &&
+      !GAS_FREE_CHAINS.includes(chainId);
     return (
       <Popover
         initialFocusRef={initialFocusRef}
@@ -148,7 +160,7 @@ const MismatchNotice: React.FC<{
   initialFocusRef: React.RefObject<HTMLButtonElement>;
   onClose: (hasSwitched: boolean) => void;
 }> = ({ initialFocusRef, onClose }) => {
-  const connectedChainId = useActiveWalletChain()?.id;
+  const connectedChainId = useDashboardActiveWalletChain()?.id;
   const desiredChainId = useSDKChainId();
   const switchNetwork = useSwitchActiveWalletChain();
   const connectionStatus = useActiveWalletConnectionStatus();
@@ -159,18 +171,25 @@ const MismatchNotice: React.FC<{
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   const chain = useSupportedChain(desiredChainId || -1);
+  const chainV5 = useV5DashboardChain(desiredChainId);
 
   const onSwitchWallet = useCallback(async () => {
-    if (actuallyCanAttemptSwitch && desiredChainId && chain) {
+    if (actuallyCanAttemptSwitch && desiredChainId && chainV5) {
       try {
-        await switchNetwork(defineDashboardChain(desiredChainId));
+        await switchNetwork(chainV5);
         onClose(true);
       } catch (e) {
         //  failed to switch network
         onClose(false);
       }
     }
-  }, [chain, actuallyCanAttemptSwitch, desiredChainId, onClose, switchNetwork]);
+  }, [
+    chainV5,
+    actuallyCanAttemptSwitch,
+    desiredChainId,
+    onClose,
+    switchNetwork,
+  ]);
 
   const shortenedName = useMemo(() => {
     const limit = isMobile ? 10 : 19;
@@ -237,13 +256,12 @@ const NoFundsNotice: React.FC<NoFundsNoticeProps> = ({ symbol }) => {
   const trackEvent = useTrack();
 
   const sdk = useSDK();
-  const chainId = useActiveWalletChain()?.id;
+  const chainId = useDashboardActiveWalletChain()?.id;
   const chainInfo = useSupportedChain(chainId || -1);
+  const router = useRouter();
 
   const hasFaucet =
-    chainInfo &&
-    (chainInfo.chainId === localhost.id ||
-      (chainInfo.faucets && chainInfo.faucets.length > 0));
+    chainInfo && (chainInfo.chainId === localhost.id || chainInfo.testnet);
 
   const requestFunds = async () => {
     if (sdk && hasFaucet) {
@@ -254,9 +272,8 @@ const NoFundsNotice: React.FC<NoFundsNoticeProps> = ({ symbol }) => {
       });
       if (chainInfo.chainId === localhost.id) {
         await sdk.wallet.requestFunds(10);
-      } else if (chainInfo?.faucets && chainInfo.faucets.length > 0) {
-        const faucet = chainInfo.faucets[0];
-        window.open(faucet, "_blank");
+      } else if (chainInfo?.testnet) {
+        router.push(`/${chainInfo.chainId}`);
       }
     }
   };
