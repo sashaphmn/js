@@ -15,20 +15,18 @@ import {
   Textarea,
   useModalContext,
 } from "@chakra-ui/react";
-import type { NFTContract, useMintNFT } from "@thirdweb-dev/react";
 import { OpenSeaPropertyBadge } from "components/badges/opensea";
 import { TransactionButton } from "components/buttons/TransactionButton";
-import { detectFeatures } from "components/contract-components/utils";
 import { PropertiesFormControl } from "components/contract-pages/forms/properties.shared";
 import { FileInput } from "components/shared/FileInput";
 import { useTrack } from "hooks/analytics/useTrack";
 import { useImageFileOrUrl } from "hooks/useImageFileOrUrl";
 import { useTxNotifications } from "hooks/useTxNotifications";
-import { thirdwebClient } from "lib/thirdweb-client";
-import { useV5DashboardChain } from "lib/v5-adapter";
 import { useForm } from "react-hook-form";
-import { getContract } from "thirdweb";
-import { useActiveAccount } from "thirdweb/react";
+import type { ThirdwebContract } from "thirdweb";
+import { mintTo as erc721MintTo } from "thirdweb/extensions/erc721";
+import { mintTo as erc1155MintTo } from "thirdweb/extensions/erc1155";
+import { useActiveAccount, useSendAndConfirmTransaction } from "thirdweb/react";
 import {
   Button,
   FormErrorMessage,
@@ -42,18 +40,13 @@ import { parseAttributes } from "utils/parseAttributes";
 const MINT_FORM_ID = "nft-mint-form";
 
 type NFTMintForm = {
-  contract?: NFTContract;
-  mintMutation: ReturnType<typeof useMintNFT>;
+  contract: ThirdwebContract;
+  isErc721: boolean;
 };
 
-export const NFTMintForm: React.FC<NFTMintForm> = ({
-  contract,
-  mintMutation,
-}) => {
+export const NFTMintForm: React.FC<NFTMintForm> = ({ contract, isErc721 }) => {
   const trackEvent = useTrack();
   const address = useActiveAccount()?.address;
-  const mutation = mintMutation;
-
   const {
     setValue,
     control,
@@ -70,21 +63,11 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
   >();
 
   const modalContext = useModalContext();
-  const chain = useV5DashboardChain(contract?.chainId);
-
-  const contractV5 =
-    contract && chain
-      ? getContract({
-          address: contract.getAddress(),
-          chain: chain,
-          client: thirdwebClient,
-        })
-      : null;
 
   const { onSuccess, onError } = useTxNotifications(
     "NFT minted successfully",
     "Failed to mint NFT",
-    contractV5,
+    contract,
   );
 
   const setFile = (file: File) => {
@@ -152,7 +135,7 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
     watch("animation_url") instanceof File ||
     watch("external_url") instanceof File;
 
-  const isErc1155 = detectFeatures(contract, ["ERC1155"]);
+  const { mutate, isPending } = useSendAndConfirmTransaction();
 
   return (
     <>
@@ -176,41 +159,41 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
               animation_url: data.animation_url || data.customAnimationUrl,
             };
 
-            if (mintMutation) {
-              trackEvent({
-                category: "nft",
-                action: "mint",
-                label: "attempt",
-              });
-              mintMutation.mutate(
-                {
+            trackEvent({
+              category: "nft",
+              action: "mint",
+              label: "attempt",
+            });
+            const nft = parseAttributes(dataWithCustom);
+            const transaction = isErc721
+              ? erc721MintTo({ contract, to: address, nft })
+              : erc1155MintTo({
+                  contract,
                   to: address,
-                  metadata: parseAttributes(dataWithCustom),
-                  supply: data.supply,
-                },
-                {
-                  onSuccess: () => {
-                    trackEvent({
-                      category: "nft",
-                      action: "mint",
-                      label: "success",
-                    });
-                    onSuccess();
-                    modalContext.onClose();
-                  },
-                  // biome-ignore lint/suspicious/noExplicitAny: FIXME
-                  onError: (error: any) => {
-                    trackEvent({
-                      category: "nft",
-                      action: "mint",
-                      label: "error",
-                      error,
-                    });
-                    onError(error);
-                  },
-                },
-              );
-            }
+                  nft,
+                  supply: BigInt(data.supply),
+                });
+            mutate(transaction, {
+              onSuccess: () => {
+                trackEvent({
+                  category: "nft",
+                  action: "mint",
+                  label: "success",
+                });
+                onSuccess();
+                modalContext.onClose();
+              },
+              // biome-ignore lint/suspicious/noExplicitAny: FIXME
+              onError: (error: any) => {
+                trackEvent({
+                  category: "nft",
+                  action: "mint",
+                  label: "error",
+                  error,
+                });
+                onError(error);
+              },
+            });
           })}
         >
           <Stack>
@@ -268,7 +251,7 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
             <Textarea {...register("description")} />
             <FormErrorMessage>{errors?.description?.message}</FormErrorMessage>
           </FormControl>
-          {isErc1155 && mintMutation && (
+          {!isErc721 && (
             <FormControl isRequired isInvalid={!!errors.supply}>
               <FormLabel>Initial Supply</FormLabel>
               <Input
@@ -357,7 +340,7 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
       </DrawerBody>
       <DrawerFooter>
         <Button
-          isDisabled={mutation?.isLoading}
+          isDisabled={isPending}
           variant="outline"
           mr={3}
           onClick={modalContext.onClose}
@@ -366,7 +349,7 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
         </Button>
         <TransactionButton
           transactionCount={1}
-          isLoading={mutation?.isLoading || false}
+          isLoading={isPending}
           form={MINT_FORM_ID}
           type="submit"
           colorScheme="primary"

@@ -127,7 +127,7 @@ export const ContractNFTPage: React.FC<NftOverviewPageProps> = ({
             />
           )}
           {detectedMintableState === "enabled" && contractQuery?.contract && (
-            <NFTMintButton contractQuery={contractQuery} />
+            <NFTMintButton contract={contract} isErc721={isErc721} />
           )}
           {detectedSharedMetadataState === "enabled" &&
             contractQuery?.contract && (
