@@ -135,7 +135,7 @@ export const ContractNFTPage: React.FC<NftOverviewPageProps> = ({
             )}
           {detectedLazyMintableState === "enabled" &&
             contractQuery?.contract && (
-              <NFTLazyMintButton contractQuery={contractQuery} />
+              <NFTLazyMintButton contract={contract} isErc721={isErc721} />
             )}
           {detectedLzyMintState === "enabled" && contractQuery?.contract && (
             <BatchLazyMintButton
