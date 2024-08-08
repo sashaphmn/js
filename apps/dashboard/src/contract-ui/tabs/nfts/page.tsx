@@ -131,7 +131,7 @@ export const ContractNFTPage: React.FC<NftOverviewPageProps> = ({
           )}
           {detectedSharedMetadataState === "enabled" &&
             contractQuery?.contract && (
-              <NFTSharedMetadataButton contractQuery={contractQuery} />
+              <NFTSharedMetadataButton contract={contract} />
             )}
           {detectedLazyMintableState === "enabled" &&
             contractQuery?.contract && (
