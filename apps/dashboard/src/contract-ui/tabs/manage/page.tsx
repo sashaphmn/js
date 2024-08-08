@@ -7,6 +7,7 @@ import { defineChain, getContract } from "thirdweb";
 import { getInstalledModules, owner } from "thirdweb/extensions/modular";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { thirdwebClient } from "../../../lib/thirdweb-client";
+import { useV5DashboardChain } from "../../../lib/v5-adapter";
 import { InstalledModulesTable } from "./components/InstalledModulesTable";
 import { InstallModuleForm } from "./components/ModuleForm";
 
@@ -35,15 +36,16 @@ export const ContractEditModulesPage: React.FC<
 function Content(props: { contractAddress: string; chainId: number }) {
   const { contractAddress, chainId } = props;
   const account = useActiveAccount();
+  const chain = useV5DashboardChain(chainId);
 
   const contract = useMemo(
     () =>
       getContract({
         client: thirdwebClient,
         address: contractAddress,
-        chain: defineChain(chainId),
+        chain: chain,
       }),
-    [contractAddress, chainId],
+    [contractAddress, chain],
   );
 
   const installedModulesQuery = useReadContract(getInstalledModules, {

@@ -1,6 +1,6 @@
 {
   "name": "thirdweb",
-  "version": "5.44.0",
+  "version": "5.44.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/thirdweb-dev/js.git#main"
@@ -204,7 +204,7 @@
     "mipd": "0.0.7",
     "node-libs-browser": "2.2.1",
     "uqr": "0.1.2",
-    "viem": "2.17.10"
+    "viem": "2.19.2"
   },
   "peerDependencies": {
     "@aws-sdk/client-lambda": "^3",
@@ -298,7 +298,7 @@
     "test:cov": "vitest dev -c ./test/vitest.config.ts --coverage",
     "test:dev": "vitest run -c ./test/vitest.config.ts",
     "test:react": "vitest run -c ./test/vitest.config.ts dev --ui src/react",
-    "typedoc": "node scripts/typedoc.mjs",
+    "typedoc": "bun run scripts/typedoc.mjs",
     "update-version": "node scripts/version.mjs"
   },
   "engines": {
