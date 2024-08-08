@@ -125,12 +125,13 @@ export function useContractRouteConfig(
       isDefault: true,
     },
     {
-      title: "Manage",
-      path: "manage",
+      title: "Modules",
+      path: "modules",
       isEnabled: extensionDetectedState({
         contractQuery,
         feature: ["ModularCore"],
       }),
+      isDefault: true,
       component: LazyContractEditModulesPage,
     },
     {
