@@ -2,7 +2,6 @@ import { useIsMinter } from "@3rdweb-sdk/react/hooks/useContractRoles";
 import {
   type DropContract,
   type NFTContract,
-  type SmartContract,
   getErcs,
 } from "@thirdweb-dev/react/evm";
 import { detectFeatures } from "components/contract-components/utils";
@@ -205,12 +204,7 @@ export function useNFTDrawerTabs({
           isDisabled: !isMinterRole,
           disabledText:
             "You don't have minter permissions to be able to update metadata",
-          children: (
-            <UpdateMetadataTab
-              contract={oldContract as SmartContract}
-              nft={nft}
-            />
-          ),
+          children: <UpdateMetadataTab contract={contract} nft={nft} />,
         },
       ]);
     }
@@ -225,5 +219,6 @@ export function useNFTDrawerTabs({
     address,
     tokenId,
     isMinterRole,
+    contract,
   ]);
 }

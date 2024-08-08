@@ -1,11 +1,10 @@
 import { Flex, useDisclosure } from "@chakra-ui/react";
-import { type SmartContract, useUpdateNFTMetadata } from "@thirdweb-dev/react";
-import type { NFT } from "thirdweb";
+import type { NFT, ThirdwebContract } from "thirdweb";
 import { Button, Drawer, Text } from "tw-components";
-import { NFTMintForm } from "./mint-form";
+import { UpdateNftMetadata } from "./update-metadata-form";
 
 interface UpdateMetadataTabProps {
-  contract: SmartContract | null;
+  contract: ThirdwebContract;
   nft: NFT;
 }
 
@@ -14,7 +13,6 @@ const UpdateMetadataTab: React.FC<UpdateMetadataTabProps> = ({
   nft,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const mutation = useUpdateNFTMetadata(contract);
 
   return (
     <>
@@ -25,11 +23,7 @@ const UpdateMetadataTab: React.FC<UpdateMetadataTabProps> = ({
         onClose={onClose}
         isOpen={isOpen}
       >
-        <NFTMintForm
-          contract={contract}
-          updateMetadataMutation={mutation}
-          nft={nft}
-        />
+        <UpdateNftMetadata contract={contract} nft={nft} />
       </Drawer>
       <Flex direction={"column"} gap={6}>
         <Text>
