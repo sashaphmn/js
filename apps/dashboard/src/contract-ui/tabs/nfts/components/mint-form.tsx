@@ -16,7 +16,6 @@ import {
   Textarea,
   useModalContext,
 } from "@chakra-ui/react";
-import type { UseMutationResult } from "@tanstack/react-query";
 import type {
   NFTContract,
   useMintNFT,
@@ -36,7 +35,6 @@ import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { type NFT, getContract } from "thirdweb";
 import { useActiveAccount } from "thirdweb/react";
-import type { NFTInput } from "thirdweb/utils";
 import {
   Button,
   FormErrorMessage,
@@ -54,17 +52,11 @@ type NFTMintForm =
   | {
       contract?: NFTContract;
       mintMutation: ReturnType<typeof useMintNFT>;
-      lazyMintMutation?: undefined;
       sharedMetadataMutation?: undefined;
       nft?: undefined;
     }
   | {
       contract?: NFTContract;
-      lazyMintMutation: UseMutationResult<
-        unknown,
-        unknown,
-        { metadatas: NFTInput[] }
-      >;
       mintMutation?: undefined;
       sharedMetadataMutation?: undefined;
       nft?: undefined;
@@ -73,27 +65,24 @@ type NFTMintForm =
       contract?: NFTContract;
       sharedMetadataMutation: ReturnType<typeof useSetSharedMetadata>;
       mintMutation?: undefined;
-      lazyMintMutation?: undefined;
       nft?: undefined;
     }
   | {
       contract?: NFTContract;
       sharedMetadataMutation?: undefined;
       mintMutation?: undefined;
-      lazyMintMutation?: undefined;
       nft: NFT;
     };
 
 export const NFTMintForm: React.FC<NFTMintForm> = ({
   contract,
-  lazyMintMutation,
   mintMutation,
   sharedMetadataMutation,
   nft,
 }) => {
   const trackEvent = useTrack();
   const address = useActiveAccount()?.address;
-  const mutation = mintMutation || lazyMintMutation || sharedMetadataMutation;
+  const mutation = mintMutation || sharedMetadataMutation;
 
   const transformedQueryData = useMemo(() => {
     return {
@@ -242,39 +231,6 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
               image: data.image || data.customImage,
               animation_url: data.animation_url || data.customAnimationUrl,
             };
-
-            if (lazyMintMutation) {
-              trackEvent({
-                category: "nft",
-                action: "lazy-mint",
-                label: "attempt",
-              });
-              lazyMintMutation.mutate(
-                {
-                  metadatas: [parseAttributes(dataWithCustom)],
-                },
-                {
-                  onSuccess: () => {
-                    trackEvent({
-                      category: "nft",
-                      action: "lazy-mint",
-                      label: "success",
-                    });
-                    onSuccess();
-                    modalContext.onClose();
-                  },
-                  onError: (error) => {
-                    trackEvent({
-                      category: "nft",
-                      action: "lazy-mint",
-                      label: "error",
-                      error,
-                    });
-                    onError(error);
-                  },
-                },
-              );
-            }
 
             if (mintMutation) {
               trackEvent({
@@ -518,11 +474,7 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
           colorScheme="primary"
           isDisabled={!isDirty && imageUrl === nft?.metadata.image}
         >
-          {sharedMetadataMutation
-            ? "Set NFT Metadata"
-            : lazyMintMutation
-              ? "Lazy Mint NFT"
-              : "Mint NFT"}
+          {sharedMetadataMutation ? "Set NFT Metadata" : "Mint NFT"}
         </TransactionButton>
       </DrawerFooter>
     </>
