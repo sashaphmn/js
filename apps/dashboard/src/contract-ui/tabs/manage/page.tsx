@@ -3,7 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useEVMContractInfo } from "@3rdweb-sdk/react";
 import { UserXIcon } from "lucide-react";
 import { useMemo } from "react";
-import { defineChain, getContract } from "thirdweb";
+import { getContract } from "thirdweb";
 import { getInstalledModules, owner } from "thirdweb/extensions/modular";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { thirdwebClient } from "../../../lib/thirdweb-client";

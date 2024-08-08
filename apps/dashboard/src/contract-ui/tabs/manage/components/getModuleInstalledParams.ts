@@ -10,7 +10,10 @@ import { getThirdwebSDK } from "../../../../lib/sdk";
 import type { ModuleMeta } from "./install-module-params";
 
 export async function getModuleInstalledParams(ext: ModuleMeta) {
-  const sdk = getThirdwebSDK(polygon.id, getDashboardChainRpc(polygon.id));
+  const sdk = getThirdwebSDK(
+    polygon.id,
+    getDashboardChainRpc(polygon.id, undefined),
+  );
 
   // get all versions of the module
   const allPublishedModules = await fetchAllVersions(

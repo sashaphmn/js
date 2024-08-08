@@ -42,7 +42,6 @@ import {
 import { ContractMetadataFieldset } from "./contract-metadata-fieldset";
 import {
   ModularContractDefaultModulesFieldset,
-  ModularContractDefaultModulesFieldset,
   showPrimarySaleFiedset,
   showRoyaltyFieldset,
   useModularContractsDefaultModulesInstallParams,
@@ -548,15 +547,15 @@ const CustomContractForm: React.FC<CustomContractFormProps> = ({
 
             {hasTrustedForwarders && <TrustedForwardersFieldset form={form} />}
 
-              {Object.keys(formDeployParams)
-                .filter((paramName) => {
-                  if (
-                    isModular &&
-                    (paramName === "_moduleInstallData" ||
-                      paramName === "_modules")
-                  ) {
-                    return false;
-                  }
+            {Object.keys(formDeployParams)
+              .filter((paramName) => {
+                if (
+                  isModular &&
+                  (paramName === "_moduleInstallData" ||
+                    paramName === "_modules")
+                ) {
+                  return false;
+                }
 
                 return true;
               })
@@ -582,21 +581,21 @@ const CustomContractForm: React.FC<CustomContractFormProps> = ({
                 );
               })}
 
-              {isModular && (
-                <>
-                  {modularContractDefaultModulesInstallParams.data ? (
-                    <ModularContractDefaultModulesFieldset
-                      form={form}
-                      modules={modularContractDefaultModulesInstallParams.data}
-                      isTWPublisher={isTWPublisher}
-                    />
-                  ) : (
-                    <div className="min-h-[250px] flex justify-center items-center">
-                      <Spinner className="size-8" />
-                    </div>
-                  )}
-                </>
-              )}
+            {isModular && (
+              <>
+                {modularContractDefaultModulesInstallParams.data ? (
+                  <ModularContractDefaultModulesFieldset
+                    form={form}
+                    modules={modularContractDefaultModulesInstallParams.data}
+                    isTWPublisher={isTWPublisher}
+                  />
+                ) : (
+                  <div className="min-h-[250px] flex justify-center items-center">
+                    <Spinner className="size-8" />
+                  </div>
+                )}
+              </>
+            )}
 
             {advancedParams.length > 0 && (
               <Accordion allowToggle>
