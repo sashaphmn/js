@@ -21,7 +21,6 @@ import type {
   NFTContract,
   useMintNFT,
   useSetSharedMetadata,
-  useUpdateNFTMetadata,
 } from "@thirdweb-dev/react";
 import { OpenSeaPropertyBadge } from "components/badges/opensea";
 import { TransactionButton } from "components/buttons/TransactionButton";
@@ -55,11 +54,9 @@ type NFTMintForm =
   | {
       contract?: NFTContract;
       mintMutation: ReturnType<typeof useMintNFT>;
-
       lazyMintMutation?: undefined;
       sharedMetadataMutation?: undefined;
       nft?: undefined;
-      updateMetadataMutation?: undefined;
     }
   | {
       contract?: NFTContract;
@@ -71,7 +68,6 @@ type NFTMintForm =
       mintMutation?: undefined;
       sharedMetadataMutation?: undefined;
       nft?: undefined;
-      updateMetadataMutation?: undefined;
     }
   | {
       contract?: NFTContract;
@@ -79,7 +75,6 @@ type NFTMintForm =
       mintMutation?: undefined;
       lazyMintMutation?: undefined;
       nft?: undefined;
-      updateMetadataMutation?: undefined;
     }
   | {
       contract?: NFTContract;
@@ -87,7 +82,6 @@ type NFTMintForm =
       mintMutation?: undefined;
       lazyMintMutation?: undefined;
       nft: NFT;
-      updateMetadataMutation: ReturnType<typeof useUpdateNFTMetadata>;
     };
 
 export const NFTMintForm: React.FC<NFTMintForm> = ({
@@ -96,15 +90,10 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
   mintMutation,
   sharedMetadataMutation,
   nft,
-  updateMetadataMutation,
 }) => {
   const trackEvent = useTrack();
   const address = useActiveAccount()?.address;
-  const mutation =
-    mintMutation ||
-    lazyMintMutation ||
-    sharedMetadataMutation ||
-    updateMetadataMutation;
+  const mutation = mintMutation || lazyMintMutation || sharedMetadataMutation;
 
   const transformedQueryData = useMemo(() => {
     return {
@@ -156,14 +145,10 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
   const { onSuccess, onError } = useTxNotifications(
     sharedMetadataMutation
       ? "NFT Metadata set successfully"
-      : updateMetadataMutation
-        ? "NFT Metadata updated successfully"
-        : "NFT minted successfully",
+      : "NFT minted successfully",
     sharedMetadataMutation
       ? "Failed to set NFT Metadata"
-      : updateMetadataMutation
-        ? "Failed to update NFT Metadata"
-        : "Failed to mint NFT",
+      : "Failed to mint NFT",
     contractV5,
   );
 
@@ -238,11 +223,7 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
     <>
       <DrawerHeader>
         <Heading>
-          {sharedMetadataMutation
-            ? "Set NFT Metadata"
-            : updateMetadataMutation
-              ? "Update NFT Metadata"
-              : "Mint NFT"}
+          {sharedMetadataMutation ? "Set NFT Metadata" : "Mint NFT"}
         </Heading>
       </DrawerHeader>
       <DrawerBody>
@@ -358,48 +339,6 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
                   onError(error);
                 },
               });
-            }
-
-            if (updateMetadataMutation && nft) {
-              trackEvent({
-                category: "nft",
-                action: "update-metadata",
-                label: "attempt",
-              });
-              updateMetadataMutation.mutate(
-                {
-                  metadata: parseAttributes({
-                    ...data,
-                    image: data.image || data.customImage || nft.metadata.image,
-                    animation_url:
-                      data.animation_url ||
-                      data.customAnimationUrl ||
-                      nft.metadata.animation_url,
-                  }),
-                  tokenId: nft.id.toString(),
-                },
-                {
-                  onSuccess: () => {
-                    trackEvent({
-                      category: "nft",
-                      action: "update-metadata",
-                      label: "success",
-                    });
-                    onSuccess();
-                    modalContext.onClose();
-                  },
-                  // biome-ignore lint/suspicious/noExplicitAny: FIXME
-                  onError: (error: any) => {
-                    trackEvent({
-                      category: "nft",
-                      action: "update-metadata",
-                      label: "error",
-                      error,
-                    });
-                    onError(error);
-                  },
-                },
-              );
             }
           })}
         >
@@ -583,9 +522,7 @@ export const NFTMintForm: React.FC<NFTMintForm> = ({
             ? "Set NFT Metadata"
             : lazyMintMutation
               ? "Lazy Mint NFT"
-              : updateMetadataMutation && nft
-                ? "Update NFT"
-                : "Mint NFT"}
+              : "Mint NFT"}
         </TransactionButton>
       </DrawerFooter>
     </>
