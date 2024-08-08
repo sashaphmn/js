@@ -35,11 +35,8 @@ export type UninstallModuleByProxyOptions = {
  * await sendTransaction({ transaction, account });
  * ```
  */
-export function uninstallModuleByProxy(
-  options: UninstallModuleByProxyOptions,
-) {
-  const { client, chain, contract, moduleProxyAddress, moduleData } =
-    options;
+export function uninstallModuleByProxy(options: UninstallModuleByProxyOptions) {
+  const { client, chain, contract, moduleProxyAddress, moduleData } = options;
 
   return uninstallModule({
     contract,

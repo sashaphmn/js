@@ -39,9 +39,7 @@ export type InstallPublishedModuleOptions = {
  * await sendTransaction({ transaction, account });
  * ```
  */
-export function installPublishedModule(
-  options: InstallPublishedModuleOptions,
-) {
+export function installPublishedModule(options: InstallPublishedModuleOptions) {
   const {
     client,
     chain,
