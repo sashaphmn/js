@@ -2,6 +2,9 @@ import type { BaseTransactionOptions } from "../../../transaction/types.js";
 import { shares } from "../__generated__/Split/read/shares.js";
 import { totalShares } from "../__generated__/Split/read/totalShares.js";
 
+/**
+ * @extension SPLIT
+ */
 export interface SplitRecipient {
   /**
    * The address of the recipient
@@ -25,11 +28,13 @@ export async function getRecipientSplitPercentage(
     totalShares({ contract }),
     shares({ contract, account: recipientAddress }),
   ]);
+  // We convert to basis points to avoid floating point loss of precision
+  // 7544n -> 75.44 (75.44 %)
+  // also we don't have to worry about number overflow in this particular context
+  const splitPercentage =
+    (Number(walletsShares) * 1e7) / Number(_totalShares) / 1e5;
   return {
     address: recipientAddress,
-    // We convert to basis points to avoid floating point loss of precision
-    // 7544n -> 0.7544 (75.44 %)
-    splitPercentage:
-      (Number(walletsShares) * 100_000) / Number(totalShares) / 100_000,
+    splitPercentage,
   };
 }
