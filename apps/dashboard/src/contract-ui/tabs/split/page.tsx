@@ -11,7 +11,6 @@ import {
   StatNumber,
 } from "@chakra-ui/react";
 import { useContract } from "@thirdweb-dev/react";
-import { BigNumber, ethers } from "ethers";
 import { useSupportedChainsRecord } from "hooks/chains/configureChains";
 import { useMemo } from "react";
 import {
