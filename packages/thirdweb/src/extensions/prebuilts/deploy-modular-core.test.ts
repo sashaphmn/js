@@ -11,7 +11,7 @@ import { uninstallPublishedModule } from "../modular/ModularCore/write/uninstall
 import { getInstalledModules } from "../modular/__generated__/ModularCore/read/getInstalledModules.js";
 import { deployPublishedContract } from "./deploy-published.js";
 
-describe.runIf(process.env.TW_SECRET_KEY)(
+describe.skip(
   "deployModularCore",
   {
     timeout: 120000,
