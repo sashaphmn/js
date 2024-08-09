@@ -2,8 +2,8 @@ import { upload } from "../../../storage/upload.js";
 import type { BaseTransactionOptions } from "../../../transaction/types.js";
 import type { NFTInput } from "../../../utils/nft/parseNft.js";
 import {
-  setTokenURI,
   type SetTokenURIParams,
+  setTokenURI,
 } from "../../erc721/__generated__/INFTMetadata/write/setTokenURI.js";
 
 /**
