@@ -1,6 +1,6 @@
 import type { BaseTransactionOptions } from "../../../transaction/types.js";
-import { totalShares } from "../__generated__/Split/read/totalShares.js";
 import { shares } from "../__generated__/Split/read/shares.js";
+import { totalShares } from "../__generated__/Split/read/totalShares.js";
 
 export interface SplitRecipient {
   /**
