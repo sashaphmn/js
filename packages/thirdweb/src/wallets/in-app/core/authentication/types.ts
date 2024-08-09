@@ -1,7 +1,9 @@
 import type { AuthType } from "@passwordless-id/webauthn/dist/esm/types.js";
 import type { ThirdwebClient } from "../../../../client/client.js";
+import type { Address } from "../../../../utils/address.js";
+import type { InjectedSupportedWalletIds } from "../../../../wallets/__generated__/wallet-ids.js";
 import type { Account } from "../../../interfaces/wallet.js";
-import type { SocialAuthOption } from "../../../types.js";
+import type { AuthOption, SocialAuthOption } from "../../../types.js";
 import type { Ecosystem } from "../../web/types.js";
 
 export type MultiStepAuthProviderType =
@@ -38,6 +40,11 @@ export type SingleStepAuthArgsType =
       type: "sign-up" | "sign-in";
       passkeyName?: string;
       authenticatorType?: AuthType;
+    }
+  | {
+      strategy: "siwe";
+      walletId: InjectedSupportedWalletIds;
+      chainId: number;
     };
 
 export type AuthArgsType = (MultiStepAuthArgsType | SingleStepAuthArgsType) & {
@@ -69,6 +76,16 @@ export enum AuthProvider {
 export type OauthOption = {
   strategy: SocialAuthOption;
   redirectUrl: string;
+};
+
+export type Profile = {
+  type: AuthOption;
+  details: {
+    id?: string;
+    email?: string;
+    phone?: string;
+    address?: Address;
+  };
 };
 
 /**
