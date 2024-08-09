@@ -45,6 +45,12 @@ const UPDATE_METADATA_FORM_ID = "nft-update-metadata-form";
 type UpdateNftMetadataForm = {
   contract: ThirdwebContract;
   nft: NFT;
+
+  /**
+   * If isDropContract (NFT Drop, Edition Drop) -> use `updateMetadata`
+   * else (NFT Collection, Edition) -> use `setTokenURI`
+   */
+  isDropContract: boolean;
 };
 
 export const UpdateNftMetadata: React.FC<UpdateNftMetadataForm> = ({

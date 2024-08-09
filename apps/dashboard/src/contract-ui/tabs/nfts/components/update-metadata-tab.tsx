@@ -6,11 +6,18 @@ import { UpdateNftMetadata } from "./update-metadata-form";
 interface UpdateMetadataTabProps {
   contract: ThirdwebContract;
   nft: NFT;
+
+  /**
+   * If isDropContract (NFT Drop, Edition Drop) -> use `updateMetadata`
+   * else (NFT Collection, Edition) -> use `setTokenURI`
+   */
+  isDropContract: boolean;
 }
 
 const UpdateMetadataTab: React.FC<UpdateMetadataTabProps> = ({
   contract,
   nft,
+  isDropContract,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -23,7 +30,11 @@ const UpdateMetadataTab: React.FC<UpdateMetadataTabProps> = ({
         onClose={onClose}
         isOpen={isOpen}
       >
-        <UpdateNftMetadata contract={contract} nft={nft} />
+        <UpdateNftMetadata
+          contract={contract}
+          nft={nft}
+          isDropContract={isDropContract}
+        />
       </Drawer>
       <Flex direction={"column"} gap={6}>
         <Text>

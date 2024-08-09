@@ -122,6 +122,12 @@ export function useNFTDrawerTabs({
       "ERC721LazyMintable",
     ]);
 
+    const isDropContract = detectFeatures(oldContract, [
+      "ERC721LazyMintable",
+      "ERC1155LazyMintableV1",
+      "ERC1155LazyMintableV2",
+    ]);
+
     const isOwner =
       (isERC1155 && balanceOfQuery?.data) ||
       (isERC721 && nft?.owner === address);
@@ -226,7 +232,13 @@ export function useNFTDrawerTabs({
           isDisabled: !isMinterRole,
           disabledText:
             "You don't have minter permissions to be able to update metadata",
-          children: <UpdateMetadataTab contract={contract} nft={nft} />,
+          children: (
+            <UpdateMetadataTab
+              contract={contract}
+              nft={nft}
+              isDropContract={isDropContract}
+            />
+          ),
         },
       ]);
     }
