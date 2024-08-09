@@ -27,7 +27,7 @@ import { useTxNotifications } from "hooks/useTxNotifications";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import type { NFT, ThirdwebContract } from "thirdweb";
-import { updateMetadata } from "thirdweb/extensions/erc721";
+import { updateMetadata, updateTokenURI } from "thirdweb/extensions/erc721";
 import { useActiveAccount, useSendAndConfirmTransaction } from "thirdweb/react";
 import {
   Button,
@@ -56,6 +56,7 @@ type UpdateNftMetadataForm = {
 export const UpdateNftMetadata: React.FC<UpdateNftMetadataForm> = ({
   contract,
   nft,
+  isDropContract,
 }) => {
   const trackEvent = useTrack();
   const address = useActiveAccount()?.address;
@@ -190,21 +191,31 @@ export const UpdateNftMetadata: React.FC<UpdateNftMetadataForm> = ({
               label: "attempt",
             });
 
-            // Both ERC721 and 1155 have identical function signature for updateMetadata
-            // so we don't need to check if one is 721 or 1155
-            const transaction = updateMetadata({
-              contract,
-              targetTokenId: BigInt(nft.id),
-              newMetadata: parseAttributes({
-                ...data,
-                image: data.image || data.customImage || nft.metadata.image,
-                animation_url:
-                  data.animation_url ||
-                  data.customAnimationUrl ||
-                  nft.metadata.animation_url,
-              }),
-              client: thirdwebClient,
+            const newMetadata = parseAttributes({
+              ...data,
+              image: data.image || data.customImage || nft.metadata.image,
+              animation_url:
+                data.animation_url ||
+                data.customAnimationUrl ||
+                nft.metadata.animation_url,
             });
+
+            // Both ERC721 and 1155 have identical function signature for updateMetadata & updateTokenMetadata
+            // so we don't need to check if one is 721 or 1155
+            const transaction = isDropContract
+              ? // For Drop contracts, we need to call the `updateBatchBaseURI` method
+                updateMetadata({
+                  contract,
+                  targetTokenId: BigInt(nft.id),
+                  newMetadata,
+                  client: thirdwebClient,
+                })
+              : // For Collection contracts, we need to call the `setTokenURI` method
+                updateTokenURI({
+                  contract,
+                  tokenId: BigInt(nft.id),
+                  newMetadata,
+                });
             mutate(transaction, {
               onSuccess: () => {
                 trackEvent({
