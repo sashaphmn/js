@@ -1,20 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { TEST_CLIENT } from "~test/test-clients.js";
-import { avalancheFuji } from "../../../chains/chain-definitions/avalanche-fuji.js";
-import { getContract } from "../../../contract/contract.js";
+import { TEST_SPLIT_CONTRACT } from "~test/test-contracts.js";
 import { getRecipientSplitPercentage } from "./getRecipientSplitPercentage.js";
 
-/**
- * All access to this contract (admin roles) have been removed
- * so this contract is effectively read-only
- *
- * cons: We might have to update the test if avalancheFuji is deprecated
- */
-const contract = getContract({
-  address: "0x87077BDEEC6Bc1Bc0D399c76742b49A5844F66F8",
-  chain: avalancheFuji,
-  client: TEST_CLIENT,
-});
+const contract = TEST_SPLIT_CONTRACT;
 
 describe("getRecipientSplitPercentage", () => {
   it("should return something", async () => {
