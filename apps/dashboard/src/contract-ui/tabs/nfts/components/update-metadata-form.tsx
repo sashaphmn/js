@@ -29,9 +29,12 @@ import { useForm } from "react-hook-form";
 import type { NFT, ThirdwebContract } from "thirdweb";
 import {
   updateMetadata as updateMetadata721,
-  updateTokenURI,
+  updateTokenURI as updateTokenURI721,
 } from "thirdweb/extensions/erc721";
-import { updateMetadata as updateMetadata1155 } from "thirdweb/extensions/erc1155";
+import {
+  updateMetadata as updateMetadata1155,
+  updateTokenURI as updateTokenURI1155,
+} from "thirdweb/extensions/erc1155";
 import { useActiveAccount, useSendAndConfirmTransaction } from "thirdweb/react";
 import {
   Button,
@@ -220,12 +223,17 @@ export const UpdateNftMetadata: React.FC<UpdateNftMetadataForm> = ({
                     client: thirdwebClient,
                   })
               : // For Collection contracts, we need to call the `setTokenURI` method
-                // We can reuse updateTokenURI since it's identical for both ERC1155 and ERC721
-                updateTokenURI({
-                  contract,
-                  tokenId: BigInt(nft.id),
-                  newMetadata,
-                });
+                nft.type === "ERC721"
+                ? updateTokenURI721({
+                    contract,
+                    tokenId: BigInt(nft.id),
+                    newMetadata,
+                  })
+                : updateTokenURI1155({
+                    contract,
+                    tokenId: BigInt(nft.id),
+                    newMetadata,
+                  });
             mutate(transaction, {
               onSuccess: () => {
                 trackEvent({
