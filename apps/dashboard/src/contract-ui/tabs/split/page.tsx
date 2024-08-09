@@ -14,7 +14,13 @@ import { useContract } from "@thirdweb-dev/react";
 import { BigNumber, ethers } from "ethers";
 import { useSupportedChainsRecord } from "hooks/chains/configureChains";
 import { useMemo } from "react";
-import { type ThirdwebContract, ZERO_ADDRESS, getContract } from "thirdweb";
+import {
+  type ThirdwebContract,
+  ZERO_ADDRESS,
+  getContract,
+  toEther,
+  toTokens,
+} from "thirdweb";
 import { getAllRecipientsPercentages } from "thirdweb/extensions/split";
 import {
   useActiveAccount,
@@ -75,19 +81,11 @@ const ContractSplitContent: React.FC<SplitContentProps> = ({ contract }) => {
     client: thirdwebClient,
     chain: contract.chain,
   });
-
   const { data: allRecipientsPercentages } = useReadContract(
     getAllRecipientsPercentages,
     { contract },
   );
-
   const balanceQuery = useSplitBalances(contract);
-  if (balanceQuery.data && allRecipientsPercentages) {
-    console.log({
-      balanceData: balanceQuery.data,
-      allRecipientsPercentages,
-    });
-  }
   const balances = useMemo(() => {
     if (!balanceQuery.data && !nativeBalanceQuery.data) {
       return [];
@@ -115,16 +113,16 @@ const ContractSplitContent: React.FC<SplitContentProps> = ({ contract }) => {
 
     return balances.reduce(
       (acc, curr) => {
+        // For native token balance, Moralis returns the zero address
+        // this logic will potentially have to change if we decide to replace the service
+        const isNativeToken = curr.token_address === ZERO_ADDRESS;
+        const displayBalance = isNativeToken
+          ? toEther(BigInt(curr.balance))
+          : toTokens(BigInt(curr.balance), curr.decimals);
         return {
           // biome-ignore lint/performance/noAccumulatingSpread: FIXME
           ...acc,
-          // convert to bps for BigNumber calculations
-          [curr.token_address]: ethers.utils.formatUnits(
-            BigNumber.from(curr.balance)
-              .mul(activeRecipient.splitPercentage * 100)
-              .div(10000),
-            curr.decimals,
-          ),
+          [curr.token_address]: displayBalance,
         };
       },
       {} as { [address: string]: string },
