@@ -27,7 +27,11 @@ import { useTxNotifications } from "hooks/useTxNotifications";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import type { NFT, ThirdwebContract } from "thirdweb";
-import { updateMetadata, updateTokenURI } from "thirdweb/extensions/erc721";
+import {
+  updateMetadata as updateMetadata721,
+  updateTokenURI,
+} from "thirdweb/extensions/erc721";
+import { updateMetadata as updateMetadata1155 } from "thirdweb/extensions/erc1155";
 import { useActiveAccount, useSendAndConfirmTransaction } from "thirdweb/react";
 import {
   Button,
@@ -200,17 +204,23 @@ export const UpdateNftMetadata: React.FC<UpdateNftMetadataForm> = ({
                 nft.metadata.animation_url,
             });
 
-            // Both ERC721 and 1155 have identical function signature for updateMetadata & updateTokenMetadata
-            // so we don't need to check if one is 721 or 1155
             const transaction = isDropContract
               ? // For Drop contracts, we need to call the `updateBatchBaseURI` method
-                updateMetadata({
-                  contract,
-                  targetTokenId: BigInt(nft.id),
-                  newMetadata,
-                  client: thirdwebClient,
-                })
+                nft.type === "ERC721"
+                ? updateMetadata721({
+                    contract,
+                    targetTokenId: BigInt(nft.id),
+                    newMetadata,
+                    client: thirdwebClient,
+                  })
+                : updateMetadata1155({
+                    contract,
+                    targetTokenId: BigInt(nft.id),
+                    newMetadata,
+                    client: thirdwebClient,
+                  })
               : // For Collection contracts, we need to call the `setTokenURI` method
+                // We can reuse updateTokenURI since it's identical for both ERC1155 and ERC721
                 updateTokenURI({
                   contract,
                   tokenId: BigInt(nft.id),
